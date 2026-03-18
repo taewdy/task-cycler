@@ -2,6 +2,8 @@
 
 A simple desktop task management app built with Tauri and Rust.
 
+[![Screenshot](screenshot.png)](screenshot.png)
+
 ## Features
 
 - **Add Tasks**: Type a task and click "Add Task" (or press Enter)
