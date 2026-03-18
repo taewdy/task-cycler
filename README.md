@@ -2,7 +2,7 @@
 
 A simple desktop task management app built with Tauri and Rust.
 
-[![Screenshot](screenshot.png)](screenshot.png)
+![Screenshot](./Screenshot.png)
 
 ## Features
 

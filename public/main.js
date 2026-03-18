@@ -213,7 +213,7 @@ async function togglePersist(index) {
 // Cmd+K: toggle persist on selected tasks, then clear selection
 // Escape: clear selection
 document.addEventListener('keydown', async (e) => {
-    if (e.key === 'k' && e.metaKey) {
+    if (e.key.toLowerCase() === 'k' && e.metaKey) {
         e.preventDefault();
         if (selected.size === 0) return;
         for (const index of selected) {
