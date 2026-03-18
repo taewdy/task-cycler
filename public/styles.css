@@ -1,0 +1,309 @@
+:root {
+    --bg: #0c0c0f;
+    --surface: #141417;
+    --surface-hover: #1c1c22;
+    --border: #26262e;
+    --text-primary: #eae8e1;
+    --text-secondary: #6b6878;
+    --text-dim: #36333f;
+    --accent: #f0a500;
+    --accent-glow: rgba(240, 165, 0, 0.12);
+    --accent-dim: rgba(240, 165, 0, 0.07);
+    --success: #4caf7d;
+    --radius: 4px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 56px 24px 80px;
+}
+
+.container {
+    width: 100%;
+    max-width: 620px;
+}
+
+/* ── Header ───────────────────────────────────── */
+
+header {
+    margin-bottom: 44px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+h1 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-weight: 800;
+    font-size: 2.2rem;
+    color: var(--text-primary);
+    letter-spacing: -0.04em;
+    line-height: 1;
+}
+
+.subtitle {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+}
+
+/* ── Add task ─────────────────────────────────── */
+
+.add-task {
+    display: flex;
+    margin-bottom: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+    transition: border-color 0.2s;
+}
+
+.add-task:focus-within {
+    border-color: var(--accent);
+}
+
+#taskInput {
+    flex: 1;
+    padding: 13px 15px;
+    background: transparent;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    outline: none;
+}
+
+#taskInput::placeholder {
+    color: var(--text-dim);
+}
+
+#addBtn {
+    padding: 13px 18px;
+    background: var(--accent);
+    color: #0c0c0f;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+}
+
+#addBtn:hover {
+    opacity: 0.82;
+}
+
+/* ── Section labels ───────────────────────────── */
+
+.section-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    padding: 0 4px;
+    user-select: none;
+}
+
+.queue-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0 12px;
+}
+
+/* ── Task items ───────────────────────────────── */
+
+.task-queue {
+    display: flex;
+    flex-direction: column;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 10px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+    position: relative;
+}
+
+.task-item:hover {
+    background: var(--surface-hover);
+}
+
+.task-item.active {
+    background: var(--accent-dim);
+    border-color: rgba(240, 165, 0, 0.25);
+    padding: 18px 14px;
+    margin-bottom: 4px;
+}
+
+.task-number {
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    min-width: 22px;
+    text-align: right;
+    flex-shrink: 0;
+    user-select: none;
+    letter-spacing: 0.04em;
+}
+
+.task-item.active .task-number {
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.task-text {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.task-item.active .task-text {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ── Actions / dropdown ───────────────────────── */
+
+.task-actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.menu-btn {
+    background: none;
+    border: none;
+    font-size: 17px;
+    cursor: pointer;
+    color: var(--text-dim);
+    padding: 4px 6px;
+    border-radius: var(--radius);
+    line-height: 1;
+    transition: background 0.15s, color 0.15s;
+}
+
+.menu-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text-secondary);
+}
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 110%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    min-width: 110px;
+    overflow: hidden;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 9px 13px;
+    background: none;
+    border: none;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: background 0.1s, color 0.1s;
+}
+
+.menu-item:hover {
+    background: var(--surface-hover);
+    color: var(--text-primary);
+}
+
+.done-item {
+    color: var(--success);
+}
+
+.done-item:hover {
+    color: var(--success);
+    background: rgba(76, 175, 125, 0.08);
+}
+
+/* ── Edit mode ────────────────────────────────── */
+
+.save-btn {
+    padding: 6px 12px;
+    background: var(--accent);
+    color: #0c0c0f;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+
+.save-btn:hover {
+    opacity: 0.82;
+}
+
+.edit-input {
+    flex: 1;
+    width: 100%;
+    padding: 2px 7px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: inherit;
+    color: var(--text-primary);
+    background: var(--surface);
+    outline: none;
+}
+
+/* ── Misc ─────────────────────────────────────── */
+
+.task-text.copied {
+    color: var(--accent);
+    transition: color 0.2s;
+}
+
+.empty-state {
+    text-align: center;
+    color: var(--text-dim);
+    padding: 64px 20px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
