@@ -307,3 +307,24 @@ h1 {
     text-transform: uppercase;
     letter-spacing: 0.12em;
 }
+
+/* ── Persistence ─────────────────────────────── */
+
+.persist-indicator {
+    color: var(--accent);
+    font-size: 0.45rem;
+    flex-shrink: 0;
+    opacity: 0.7;
+    margin-right: -6px;
+}
+
+/* ── Selection ───────────────────────────────── */
+
+.task-item.selected {
+    border-color: var(--text-dim);
+    background: var(--surface-hover);
+}
+
+.task-item.active.selected {
+    border-color: var(--accent);
+}

@@ -1,6 +1,14 @@
 const { invoke } = window.__TAURI__.core;
 
 let tasks = [];
+let selected = new Set();
+
+// Generic command helper — mutations return updated task list
+async function runCommand(command, args = {}) {
+    const updated = await invoke(command, args);
+    tasks = updated;
+    renderTasks();
+}
 
 // Load tasks on startup
 async function loadTasks() {
@@ -11,6 +19,14 @@ async function loadTasks() {
         console.error('Failed to load tasks:', error);
     }
 }
+
+// Close all open dropdown menus
+function closeAllMenus() {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+}
+
+// Single persistent listener for closing menus
+document.addEventListener('click', closeAllMenus);
 
 // Render tasks to the UI
 function renderTasks() {
@@ -35,13 +51,17 @@ function renderTasks() {
         }
 
         const taskEl = document.createElement('div');
-        taskEl.className = 'task-item' + (index === 0 ? ' active' : '');
+        let classes = 'task-item';
+        if (index === 0) classes += ' active';
+        if (selected.has(index)) classes += ' selected';
+        taskEl.className = classes;
 
         const numLabel = index === 0 ? 'now' : String(index + 1).padStart(2, '0');
 
         taskEl.innerHTML = `
+            ${task.persisted ? '<span class="persist-indicator" title="Persisted">●</span>' : ''}
             <span class="task-number">${numLabel}</span>
-            <div class="task-text">${task}</div>
+            <div class="task-text"></div>
             <div class="task-actions">
                 <button class="menu-btn" title="Actions">⋮</button>
                 <div class="dropdown-menu hidden">
@@ -50,6 +70,7 @@ function renderTasks() {
                 </div>
             </div>
         `;
+        taskEl.querySelector('.task-text').textContent = task.text;
 
         const textEl = taskEl.querySelector('.task-text');
         const menuBtn = taskEl.querySelector('.menu-btn');
@@ -58,16 +79,27 @@ function renderTasks() {
         // Double-click to copy
         textEl.addEventListener('dblclick', (e) => {
             e.stopPropagation();
-            navigator.clipboard.writeText(task);
+            navigator.clipboard.writeText(task.text);
             showCopiedFeedback(textEl);
         });
 
-        // Single click on task body cycles it — but not if user is selecting text
+        // Click on task body: Cmd+Click toggles selection, plain click cycles
         taskEl.addEventListener('click', (e) => {
-            if (!e.target.closest('.task-actions') && !e.target.closest('.edit-input')) {
-                if (window.getSelection().toString().length === 0) {
-                    cycleTask(index);
+            if (e.target.closest('.task-actions') || e.target.closest('.edit-input')) return;
+            if (window.getSelection().toString().length > 0) return;
+
+            if (e.metaKey) {
+                // Cmd+Click: toggle selection
+                if (selected.has(index)) {
+                    selected.delete(index);
+                } else {
+                    selected.add(index);
                 }
+                renderTasks();
+            } else {
+                // Plain click: clear selection and cycle
+                selected.clear();
+                cycleTask(index);
             }
         });
 
@@ -91,17 +123,9 @@ function renderTasks() {
 
         taskQueue.appendChild(taskEl);
     });
-
-    // Close menus when clicking elsewhere
-    document.addEventListener('click', closeAllMenus, { once: true });
-}
-
-function closeAllMenus() {
-    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
 }
 
 function showCopiedFeedback(el) {
-    const original = el.textContent;
     el.classList.add('copied');
     setTimeout(() => el.classList.remove('copied'), 800);
 }
@@ -110,12 +134,20 @@ function showCopiedFeedback(el) {
 function startEdit(index, taskEl) {
     const textEl = taskEl.querySelector('.task-text');
     const actionsEl = taskEl.querySelector('.task-actions');
-    const currentText = tasks[index];
+    const currentText = tasks[index].text;
 
-    textEl.innerHTML = `<input class="edit-input" value="${currentText.replace(/"/g, '&quot;')}" />`;
-    actionsEl.innerHTML = `<button class="save-btn" data-index="${index}">Save</button>`;
+    const input = document.createElement('input');
+    input.className = 'edit-input';
+    input.value = currentText;
+    textEl.textContent = '';
+    textEl.appendChild(input);
 
-    const input = textEl.querySelector('.edit-input');
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'save-btn';
+    saveBtn.textContent = 'Save';
+    actionsEl.textContent = '';
+    actionsEl.appendChild(saveBtn);
+
     input.focus();
     input.select();
 
@@ -123,8 +155,8 @@ function startEdit(index, taskEl) {
         const newText = input.value.trim();
         if (newText && newText !== currentText) {
             try {
-                await invoke('update_task', { index, task: newText });
-                tasks = await invoke('get_tasks');
+                await runCommand('update_task', { index, task: newText });
+                return;
             } catch (error) {
                 console.error('Failed to update task:', error);
             }
@@ -132,7 +164,7 @@ function startEdit(index, taskEl) {
         renderTasks();
     };
 
-    actionsEl.querySelector('.save-btn').addEventListener('click', save);
+    saveBtn.addEventListener('click', save);
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') save();
         if (e.key === 'Escape') renderTasks();
@@ -146,37 +178,57 @@ async function addTask() {
 
     if (taskText) {
         try {
-            await invoke('add_task', { task: taskText });
-            tasks = await invoke('get_tasks');
+            await runCommand('add_task', { task: taskText });
             input.value = '';
-            renderTasks();
         } catch (error) {
             console.error('Failed to add task:', error);
         }
     }
 }
 
-// Cycle a task to the bottom
 async function cycleTask(index) {
     try {
-        await invoke('cycle_task', { index });
-        tasks = await invoke('get_tasks');
-        renderTasks();
+        await runCommand('cycle_task', { index });
     } catch (error) {
         console.error('Failed to cycle task:', error);
     }
 }
 
-// Mark task as done
-window.markDone = async function(index) {
+async function markDone(index) {
     try {
-        await invoke('mark_done', { index });
-        tasks = await invoke('get_tasks');
-        renderTasks();
+        await runCommand('mark_done', { index });
     } catch (error) {
         console.error('Failed to mark task as done:', error);
     }
-};
+}
+
+async function togglePersist(index) {
+    try {
+        await runCommand('toggle_persist', { index });
+    } catch (error) {
+        console.error('Failed to toggle persist:', error);
+    }
+}
+
+// Cmd+K: toggle persist on selected tasks, then clear selection
+// Escape: clear selection
+document.addEventListener('keydown', async (e) => {
+    if (e.key === 'k' && e.metaKey) {
+        e.preventDefault();
+        if (selected.size === 0) return;
+        for (const index of selected) {
+            await togglePersist(index);
+        }
+        selected.clear();
+        renderTasks();
+    }
+    if (e.key === 'Escape') {
+        if (selected.size > 0) {
+            selected.clear();
+            renderTasks();
+        }
+    }
+});
 
 // Event listeners
 document.getElementById('addBtn').addEventListener('click', addTask);
